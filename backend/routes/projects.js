@@ -5,11 +5,12 @@ const DashboardModule = require('../services/DashboardModule');
 const ConstraintChecker = require('../services/ConstraintChecker');
 const { readCollection } = require('../utils/dataStore');
 const { validateBody } = require('../middleware/validate');
+const { schemas, cross, lists } = require('../middleware/schemas');
 const { ApiError } = require('../middleware/errorHandler');
 
 const router = express.Router();
 
-const PRODUCT_TYPES = ['Fresh Food', 'Ambient Food', 'Frozen Food', 'Consumer Goods', 'Industrial', 'Other'];
+const PRODUCT_TYPES = lists.PRODUCT_TYPES;
 
 // ---- Projects -------------------------------------------------------------
 
@@ -17,31 +18,25 @@ router.get('/', (req, res) => {
   res.json({ projects: PackagingEngine.listProjectsForUser(req.user) });
 });
 
-router.post(
-  '/',
-  validateBody({
-    name: { required: true, type: 'string' },
-    productType: { required: true, type: 'string', enum: PRODUCT_TYPES },
-  }),
-  (req, res) => {
-    const project = PackagingEngine.createProject(req.user, req.body);
-    res.status(201).json({ project });
-  }
-);
+// PROJ-02: name, product type, description AND transition objective are all required.
+router.post('/', validateBody(schemas.project), (req, res) => {
+  const project = PackagingEngine.createProject(req.user, req.body);
+  res.status(201).json({ project });
+});
 
 router.get('/:id', (req, res) => {
   const project = PackagingEngine.getProject(req.params.id, req.user);
   res.json({ project });
 });
 
-router.patch('/:id', (req, res) => {
+router.patch('/:id', validateBody(schemas.projectPatch), (req, res) => {
   const project = PackagingEngine.updateProject(req.params.id, req.user, req.body);
   res.json({ project });
 });
 
 // ---- Packaging specification -----------------------------------------------
 
-router.post('/:id/specification', (req, res) => {
+router.post('/:id/specification', validateBody(schemas.specification), (req, res) => {
   PackagingEngine.getProject(req.params.id, req.user); // ownership check
   const spec = PackagingEngine.saveSpecification(req.params.id, req.body);
   res.json({ specification: spec });
@@ -54,7 +49,7 @@ router.get('/:id/specification', (req, res) => {
 
 // ---- Performance requirements ------------------------------------------------
 
-router.post('/:id/requirements', (req, res) => {
+router.post('/:id/requirements', validateBody(schemas.requirements), (req, res) => {
   PackagingEngine.getProject(req.params.id, req.user);
   const requirements = PackagingEngine.saveRequirements(req.params.id, req.body);
   res.json({ requirements });
@@ -67,7 +62,7 @@ router.get('/:id/requirements', (req, res) => {
 
 // ---- Manufacturing constraints ------------------------------------------------
 
-router.post('/:id/manufacturing', (req, res) => {
+router.post('/:id/manufacturing', validateBody(schemas.manufacturing, cross.manufacturing), (req, res) => {
   PackagingEngine.getProject(req.params.id, req.user);
   const manufacturing = PackagingEngine.saveManufacturing(req.params.id, req.body);
   res.json({ manufacturing });
@@ -80,7 +75,7 @@ router.get('/:id/manufacturing', (req, res) => {
 
 // ---- Regulatory requirements ---------------------------------------------------
 
-router.post('/:id/regulatory', (req, res) => {
+router.post('/:id/regulatory', validateBody(schemas.regulatory), (req, res) => {
   PackagingEngine.getProject(req.params.id, req.user);
   const regulatory = PackagingEngine.saveRegulatory(req.params.id, req.body);
   res.json({ regulatory });
@@ -136,11 +131,7 @@ router.get('/:id/recommendation/history', (req, res) => {
 
 router.post(
   '/:id/trial-result',
-  validateBody({
-    performanceResult: { required: true, type: 'string', enum: ['Pass', 'Fail'] },
-    manufacturingResult: { required: true, type: 'string', enum: ['Pass', 'Fail'] },
-    regulatoryResult: { required: true, type: 'string', enum: ['Pass', 'Fail'] },
-  }),
+  validateBody(schemas.trialResult),
   (req, res) => {
     PackagingEngine.getProject(req.params.id, req.user);
     const { result, updatedRecommendation } = RecommendationEngine.submitTrialResult(req.params.id, req.user, req.body);

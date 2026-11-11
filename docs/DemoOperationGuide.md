@@ -49,10 +49,15 @@ recorded yet.
 3. Go to **Candidate Alternatives** — note the manufacturing compatibility badges update
    immediately for materials whose `minLineSpeedMpm–maxLineSpeedMpm` no longer reaches the
    tightened range.
-4. Select several candidates (include at least one barrier-coated Mono-PE and the Mono-PP options)
-   and **Generate Trials & Optimise →**.
-5. Observe that materials whose processing speed range falls short of 100–140 m/min are scored down
-   or excluded, visibly shifting the ranking versus an unconstrained run.
+4. Select **MAT-003, MAT-004, MAT-005 and MAT-006** and **Generate Trials & Optimise →**.
+5. **MAT-003, MAT-004 and MAT-006 are excluded** — their cast-film line-speed windows
+   (40–80, 30–75 and 50–84 m/min) fall short of 100–140 m/min — and **MAT-005 (100–180 m/min) is
+   ranked #1**. Each exclusion lists the failed constraint and its numbers.
+
+> Note: the requirements document's DEMO-02 text names only the EVOH and SiOx barrier materials; the
+> seeded library also excludes the barrier Mono-PP variant, because its cast-film window is likewise
+> below 100 m/min. The behaviour (a single tightened constraint visibly re-orders the list) is as
+> specified.
 
 **Key demo point:** tightening a single manufacturing constraint visibly re-orders the ranked list —
 the manufacturing feasibility engine is live, not cosmetic.

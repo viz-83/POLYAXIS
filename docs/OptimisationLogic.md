@@ -9,10 +9,11 @@ Selected materials
 Evidence filter (exclude materials with a prior manufacturing/regulatory/overall trial failure)
    │
    ▼
-CandidateGenerator: 3 process-parameter profiles per remaining material
+CandidateGenerator: one trial per material × process profile (5 profiles from data/profiles.json:
+low-temp … high-temp, each with its own temperature position and cost/uncertainty modifier)
    │
    ▼
-ConstraintChecker: manufacturing feasibility + regulatory compliance per candidate
+ConstraintChecker: manufacturing feasibility + regulatory compliance + performance check per candidate
    │
    ▼
 Hard-constraint pre-filter (TRIAL-04 / REG-07) — excluded candidates recorded with a reason
@@ -21,10 +22,11 @@ Hard-constraint pre-filter (TRIAL-04 / REG-07) — excluded candidates recorded 
 TrialOptimisationEngine: 5-dimension weighted score → composite score (0–100)
    │
    ▼
-Deterministic sort (composite score desc, id asc tie-break) → ranked list
+Deterministic sort (unrounded composite desc, then materialId|profileId asc) → ranked list
    │
    ▼
-RecommendationEngine: primary pick, confidence level, plain-language rationale
+RecommendationEngine: keep the top 12 (MAX_TRIALS_PER_RUN; the rest counted in `trimmedCount`),
+primary pick, confidence level, plain-language rationale
 ```
 
 The engine is **rule-based and deterministic**: identical project inputs and identical evidence
@@ -41,11 +43,23 @@ Three sub-checks, each returning a 0–1 score:
 | Line speed | Project's `lineSpeedMinMpm–lineSpeedMaxMpm` vs. the material's `minLineSpeedMpm–maxLineSpeedMpm` | 35% |
 | Material compatibility | Free-text constraint note (e.g. "PE-compatible sealing unit only") vs. the material's polymer family | 20% |
 
-Overlapping ranges score 1.0 (full pass) or 0.6 (partial overlap, <50% of the material's span
-covered); non-overlapping ranges score 0.35 if the gap is ≤10°C / ≤15 m/min ("conditional"), or 0.0
-("fail") beyond that. A material is **hard-excluded** (TRIAL-04) when the blended feasibility score
-falls below 0.4 **and** the project's `constraintFlexibility` is `Hard` (the default). Setting it to
+**Per-equipment windows.** A material may carry `equipmentProfiles` overrides keyed by equipment type
+(e.g. Cast Film Line) that replace its default temperature and line-speed windows. Every equipment
+type selected on the project is evaluated and the **best** result is kept, so a material only fails if
+it cannot run on any of the selected lines (`ConstraintChecker.windowsFor`).
+
+**Tolerances.** The temperature check allows 5 °C and the line-speed check 15 m/min of slack. Within
+the tolerance the check is *conditional*; beyond it, *fail*. Coverage of the required range
+decides pass vs. conditional (full coverage → pass).
+
+**Hard exclusion (TRIAL-04).** Each dimension (temperature, speed, compatibility) is judged on its
+own. If **any single dimension fails** and the project's `constraintFlexibility` is `Hard` (the
+default), the candidate is hard-excluded — a blended score can no longer mask one failed dimension.
 `Soft` downgrades a would-be exclusion to a scored-down candidate instead (MFG-06).
+
+**Performance check.** `performanceCheck(material, requirements)` compares OTR/WVTR/shelf life with
+the targets: pass, conditional (within 15%) or fail. It is informational — shown on the
+recommendation card — and never excludes a candidate by itself.
 
 ## 3. Regulatory compliance (`ConstraintChecker.regulatoryCompliance`)
 
@@ -123,7 +137,11 @@ composite = 100 × ( 0.30·informationGain + 0.25·feasibility + 0.20·uncertain
 Default weights (ENGINE-02, admin-configurable via **Admin Panel → Scoring Weights**, must sum to
 100%): Information Gain 30%, Feasibility 25%, Uncertainty Reduction 20%, Regulatory 15%, Cost 10%.
 
-The ranked list sorts by composite score descending; ties break on trial ID for full determinism.
+The ranked list sorts by the **unrounded** composite score descending; ties break on the stable key
+`materialId|profileId` — never on a generated UUID, which would differ between runs and break
+ENGINE-09. The weights used are stored on each run (`trial.weights`) so a past ranking can be
+explained after an admin changes them. `DEFAULT_SCORING_WEIGHTS` (env) is the fallback when no
+`scoring.json` exists.
 **Confidence level** (REC-09) is derived from the gap between rank #1 and #2: ≥15 points → High,
 5–14 → Medium, <5 → Low.
 

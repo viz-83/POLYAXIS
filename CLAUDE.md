@@ -31,6 +31,26 @@ file that implements it.
   `AdminService` sit alongside these.
 - **Nine core screens + Login + Admin Panel** in `frontend/src/screens/`, one file each, matching
   §7 of the requirements document 1:1 (see the route table in `frontend/src/App.jsx`).
+- **UI structure.** `Layout.jsx` is the app shell (dark sidebar, mobile drawer). Every
+  `/projects/:id/*` route is nested under `ProjectLayout.jsx`, which loads the project, exposes it via
+  `useProject()` and renders one compact project bar (name + `JourneyRail` step pills; sticky on desktop
+  only) above the step. Each of the five workflow steps has its own visual metaphor: Setup = before/after
+  canvas, Requirements = constraint console, Materials = OTR/WVTR scatter map, Optimise = priority
+  trial / leaderboard / filtered-out tabs (`RecommendationBoard`), Results = lab verdict, then a
+  before/after diff. All charts are hand-written SVG in `components/charts.jsx` (no chart library).
+- **UX conventions — keep these when adding or changing a step.**
+  1. *The primary action must never need scrolling.* Every step ends with `<ActionBar status={…}>` — a
+     `sticky bottom-3` bar with live status on the left and actions on the right (`.btn-cta` primary,
+     `.btn-ghost-dark` secondary). Don't put a step's main button inside a scrolling card.
+  2. *Long pages become tabs* (`components/Tabs.jsx`), not longer pages.
+  3. *Cards are `components/Section.jsx`* (titled header strip + body) so every card looks the same.
+  4. Any grid that goes multi-column at a breakpoint needs an explicit `grid-cols-1` base track,
+     otherwise long content widens the column and the page scrolls sideways on phones.
+- **Palette discipline.** Teal (`brand-*`) + slate (`ink-*`) + white are the brand. Amber (`accent-*`, the
+  logo's dot) is reserved for "winner"/highlight moments; red only ever means failure. Do not add other
+  colour families. `utils/stages.js` holds the shared step icons/labels (`STAGES`) and the five scoring
+  dimensions' chart colours (`DIMS`, all inside the palette). Class strings there must be written out in
+  full — never assembled dynamically — or Tailwind will purge them.
 
 Full architecture write-up: [`docs/Architecture.md`](./docs/Architecture.md). Data schemas:
 [`docs/DataStructure.md`](./docs/DataStructure.md). Engine formulas:

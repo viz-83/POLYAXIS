@@ -26,12 +26,13 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
+      {/* Top-right, just below the app header, so toasts never cover the sticky action bar at the bottom. */}
+      <div className="pointer-events-none fixed left-4 right-4 top-[4.25rem] z-[60] flex flex-col gap-2 sm:left-auto sm:w-full sm:max-w-sm lg:right-6 lg:top-[4.5rem]">
         {toasts.map((t) => (
           <div
             key={t.id}
             role="status"
-            className={`flex items-start gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-raised ring-1 ${
+            className={`pointer-events-auto flex items-start gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-raised ring-1 ${
               t.variant === 'success'
                 ? 'bg-brand-600 text-white ring-brand-700'
                 : t.variant === 'error'

@@ -1,12 +1,28 @@
 const { readObject } = require('../utils/dataStore');
 
-const DEFAULT_WEIGHTS = {
+const BUILT_IN_WEIGHTS = {
   informationGain: 0.30,
   feasibility: 0.25,
   uncertaintyReduction: 0.20,
   regulatory: 0.15,
   cost: 0.10,
 };
+
+/** §8.5: default scoring weights are configurable via the DEFAULT_SCORING_WEIGHTS env var (JSON, must sum to 1). */
+function weightsFromEnv() {
+  const raw = process.env.DEFAULT_SCORING_WEIGHTS;
+  if (!raw) return null;
+  try {
+    const w = JSON.parse(raw);
+    const keys = Object.keys(BUILT_IN_WEIGHTS);
+    const total = keys.reduce((s, k) => s + Number(w[k]), 0);
+    if (keys.every((k) => Number.isFinite(Number(w[k])) && Number(w[k]) >= 0) && Math.abs(total - 1) < 0.01) return w;
+  } catch { /* fall through to built-in defaults */ }
+  console.warn('DEFAULT_SCORING_WEIGHTS is not valid JSON summing to 1 across the five dimensions — using built-in defaults.');
+  return null;
+}
+
+const DEFAULT_WEIGHTS = weightsFromEnv() || BUILT_IN_WEIGHTS;
 
 function clamp(value, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value));
@@ -103,12 +119,14 @@ class TrialOptimisationEngine {
         ...trial,
         dimensionScores: dims,
         compositeScore: Math.round(compositeRaw * 100),
+        compositeExact: Math.round(compositeRaw * 1e6) / 1e6, // unrounded score — breaks ties between equal displayed scores
       };
     });
 
-    // ENGINE-09: deterministic tie-break by trial id after score, so repeat runs on identical
-    // input always yield an identical order.
-    scored.sort((a, b) => b.compositeScore - a.compositeScore || a.id.localeCompare(b.id));
+    // ENGINE-09: identical inputs must give an identical order. Ties are broken by the exact (unrounded)
+    // score and then by a stable material+profile key — NEVER by the trial id, which is a random UUID.
+    const key = (t) => `${t.materialId}|${t.profileId}`;
+    scored.sort((a, b) => b.compositeExact - a.compositeExact || key(a).localeCompare(key(b)));
     return scored;
   }
 

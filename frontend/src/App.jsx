@@ -3,7 +3,9 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import Layout from './Layout';
+import ProjectLayout from './ProjectLayout';
 
+import Landing from './screens/Landing';
 import Login from './screens/Login';
 import ProjectList from './screens/ProjectList';
 import ProjectSetup from './screens/ProjectSetup';
@@ -22,19 +24,22 @@ export default function App() {
       <ToastProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Navigate to="/projects" replace />} />
+          <Route path="/" element={<Landing />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/new" element={<ProjectSetup />} />
-              <Route path="/projects/:id/setup" element={<ProjectSetup />} />
-              <Route path="/projects/:id/requirements" element={<RequirementsConstraints />} />
-              <Route path="/projects/:id/materials" element={<CandidateAlternatives />} />
-              <Route path="/projects/:id/recommendation" element={<TrialRecommendation />} />
-              <Route path="/projects/:id/trial-result" element={<TrialResult />} />
-              <Route path="/projects/:id/updated-recommendation" element={<UpdatedRecommendation />} />
-              <Route path="/projects/:id/dashboard" element={<ProjectDashboard />} />
+              <Route path="/projects/:id" element={<ProjectLayout />}>
+                <Route path="setup" element={<ProjectSetup />} />
+                <Route path="requirements" element={<RequirementsConstraints />} />
+                <Route path="materials" element={<CandidateAlternatives />} />
+                <Route path="recommendation" element={<TrialRecommendation />} />
+                <Route path="trial-result" element={<TrialResult />} />
+                <Route path="updated-recommendation" element={<UpdatedRecommendation />} />
+                <Route path="dashboard" element={<ProjectDashboard />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
 
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminPanel />} />

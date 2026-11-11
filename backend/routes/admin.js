@@ -1,6 +1,8 @@
 const express = require('express');
 const AdminService = require('../services/AdminService');
 const { requireAdmin } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validate');
+const { schemas, cross } = require('../middleware/schemas');
 
 const router = express.Router();
 
@@ -24,11 +26,17 @@ router.get('/materials', (req, res) => {
   res.json({ materials: AdminService.listMaterials() });
 });
 
-router.patch('/materials/:id', (req, res) => {
-  const material = AdminService.upsertMaterial(req.params.id, req.body);
-  res.json({ material });
+// MAT-09 / ADMIN-05: add a material to the library.
+router.post('/materials', validateBody(schemas.material(true), cross.material), (req, res) => {
+  res.status(201).json({ material: AdminService.createMaterial(req.body) });
 });
 
+// MAT-09 / ADMIN-05: edit a material profile (partial update).
+router.patch('/materials/:id', validateBody(schemas.material(false), cross.material), (req, res) => {
+  res.json({ material: AdminService.updateMaterial(req.params.id, req.body) });
+});
+
+// MAT-09 / ADMIN-06: enable / disable a material.
 router.patch('/materials/:id/active', (req, res) => {
   const material = AdminService.setMaterialActive(req.params.id, Boolean(req.body.active));
   res.json({ material });

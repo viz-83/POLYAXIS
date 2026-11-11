@@ -61,9 +61,13 @@ PostgreSQL tables in Phase 2 (§10.4 of the requirements document).
 | `processingTempMinC`, `processingTempMaxC` | number | Extrusion/converting melt window — compared against the project's manufacturing operating-temperature range |
 | `minLineSpeedMpm`, `maxLineSpeedMpm` | number | Compared against the project's line-speed constraint |
 | `ukEprRecyclabilityPercent`, `euPpwrRecyclabilityPercent` | number | Compared against `regulations.json` thresholds |
+| `equipmentProfiles` | `{ [equipmentType]: { processingTempMinC, processingTempMaxC, minLineSpeedMpm, maxLineSpeedMpm } }` | Optional per-equipment overrides of the default windows above; `ConstraintChecker.windowsFor` uses them when the project's equipment type matches |
 | `baseTrialCostGbp` | number | |
 | `typicalShelfLifeSuitability` | string | |
 | `active` | boolean | Admin can disable a material from `AdminService.setMaterialActive` |
+
+Admins add (`POST /api/admin/materials`, id auto-assigned as `MAT-00N`) and edit
+(`PATCH /api/admin/materials/:id`) materials; both are validated by `middleware/schemas.js`.
 
 ## `trials.json` (one record per optimisation run)
 
@@ -79,9 +83,12 @@ PostgreSQL tables in Phase 2 (§10.4 of the requirements document).
 | `confidence` | `'High'\|'Medium'\|'Low'` | Derived from the #1/#2 score gap |
 | `rationale` | string | Plain-language explanation |
 | `basedOnResultId` | string \| null | Last result incorporated, if any |
+| `trimmedCount` | number | Candidates scored but dropped because only the top 12 (`MAX_TRIALS_PER_RUN`) are kept |
+| `weights` | object | The scoring weights in force when this run was produced |
 
 **Trial** (element of `ranked`): `id`, `materialId`, `materialName`, `profileId`, `trialName`,
-`processParameters { temperatureC, lineSpeedMpm, sealConditions }`, `estimatedCostGbp`,
+`processParameters { temperatureC, lineSpeedMpm, sealConditions, equipment }`, `performanceTargets`,
+`performanceCheck { status, reason }`, `estimatedCostGbp`,
 `manufacturingCheck { status, score, reason, dimensions }`, `regulatoryCheck { status, score,
 reason, frameworks }`, `dimensionScores { informationGain, feasibility, uncertaintyReduction,
 regulatory, cost }` (each 0–1), `compositeScore` (0–100), `expectedOutcomeDescription`.
@@ -112,3 +119,23 @@ regulatory, cost }` (each 0–1), `compositeScore` (0–100), `expectedOutcomeDe
 ## `systemStatus.json` (singleton object)
 
 `{ "lastResetAt": "...", "seededAt": "..." }`
+
+## `profiles.json` (array, seeded)
+
+The five process-parameter profiles the `CandidateGenerator` expands every material into:
+`{ id, name, tempPosition (0–1 across the usable overlap), costModifier, uncertaintyModifier,
+sealConditions }` — low-temp, low-mid-temp, mid-temp, upper-mid-temp, high-temp. If the file is
+missing the generator falls back to three built-in profiles.
+
+## `baselines.json` (array, seeded)
+
+A pristine copy of each demo project's inputs (project, specification, requirements, manufacturing,
+regulatory). **Admin → Reset** restores a demo project from this file; non-demo (user-created)
+projects only lose their trials/results and have their stage recalculated.
+
+## Session activity (in memory, not persisted)
+
+`utils/sessionTracker.js` records the last request time per user so **System Status** can show
+active sessions. The sliding session works through the `X-Session-Token` response header: once a
+token is older than `SESSION_REFRESH_AFTER_SECONDS` (default 300) the API returns a fresh one, which
+the frontend's Axios interceptor stores.

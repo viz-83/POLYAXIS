@@ -6,6 +6,8 @@ const ConstraintChecker = require('./ConstraintChecker');
 const CandidateGenerator = require('./CandidateGenerator');
 const TrialOptimisationEngine = require('./TrialOptimisationEngine');
 
+const MAX_TRIALS_PER_RUN = 12; // TRIAL-05
+
 function fmt(n, digits = 1) {
   return typeof n === 'number' ? n.toFixed(digits) : n;
 }
@@ -51,6 +53,7 @@ class RecommendationEngine {
     const excludedByEvidence = this.excludedMaterialIdsFromEvidence(priorResults);
 
     let materials = this.getActiveMaterials(selectedMaterialIds);
+    const requestedMaterialIds = materials.map((m) => m.id); // before evidence filtering, so re-runs keep the full shortlist
     const evidenceExcluded = materials.filter((m) => excludedByEvidence.has(m.id));
     materials = materials.filter((m) => !excludedByEvidence.has(m.id));
 
@@ -62,7 +65,12 @@ class RecommendationEngine {
     });
 
     const materialsById = Object.fromEntries(readCollection('materials').map((m) => [m.id, m]));
-    const ranked = TrialOptimisationEngine.score(candidates, materialsById, requirements, priorResults);
+    // Score EVERY candidate (cost is normalised across the whole batch), then keep the best MAX_TRIALS_PER_RUN
+    // (TRIAL-05). Trimming by score — rather than slicing candidates in generation order — means no material is
+    // silently dropped just because it appeared later in the list.
+    const allScored = TrialOptimisationEngine.score(candidates, materialsById, requirements, priorResults);
+    const ranked = allScored.slice(0, MAX_TRIALS_PER_RUN);
+    const trimmedCount = allScored.length - ranked.length;
     const confidence = TrialOptimisationEngine.confidenceLevel(ranked);
 
     const fullExcluded = [
@@ -83,9 +91,11 @@ class RecommendationEngine {
     const record = {
       id: uuid(),
       projectId,
-      selectedMaterialIds: materials.map((m) => m.id),
+      selectedMaterialIds: requestedMaterialIds,
+      weights: TrialOptimisationEngine.getWeights(), // weights in force for this run, for score-composition charts
       generatedAt: nowIso(),
       ranked,
+      trimmedCount, // lower-scoring trials beyond the 12-trial cap
       excluded: fullExcluded,
       primaryRecommendationId: primary ? primary.id : null,
       confidence,

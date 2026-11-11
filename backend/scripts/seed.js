@@ -50,7 +50,7 @@ const materials = [
     id: 'MAT-001', name: 'Mono-PE 60µm', polymerFamily: 'Mono-PE', barrierType: 'None',
     layerStructure: 'Single-layer blown PE film, 60µm gauge',
     otr: 8.5, wvtr: 4.2, sealTempMinC: 110, sealTempMaxC: 130,
-    processingTempMinC: 185, processingTempMaxC: 215,
+    processingTempMinC: 175, processingTempMaxC: 205,
     minLineSpeedMpm: 90, maxLineSpeedMpm: 170,
     ukEprRecyclabilityPercent: 65, euPpwrRecyclabilityPercent: 65,
     baseTrialCostGbp: 1800, typicalShelfLifeSuitability: 'Up to 3 months, standard sensitivity',
@@ -60,7 +60,7 @@ const materials = [
     id: 'MAT-002', name: 'Mono-PE 80µm', polymerFamily: 'Mono-PE', barrierType: 'None',
     layerStructure: 'Single-layer blown PE film, 80µm gauge',
     otr: 6.8, wvtr: 3.5, sealTempMinC: 115, sealTempMaxC: 135,
-    processingTempMinC: 185, processingTempMaxC: 215,
+    processingTempMinC: 180, processingTempMaxC: 210,
     minLineSpeedMpm: 80, maxLineSpeedMpm: 160,
     ukEprRecyclabilityPercent: 68, euPpwrRecyclabilityPercent: 68,
     baseTrialCostGbp: 2100, typicalShelfLifeSuitability: 'Up to 6 months, standard sensitivity',
@@ -128,6 +128,36 @@ const materials = [
   },
 ];
 
+// Per-equipment processing windows (the dataset's answer to "what can each line actually run?").
+// Blown-film windows are the material defaults above. On a CAST film line, plain PP and PE films run at cast
+// speeds, whereas co-extruded EVOH, vacuum-coated SiOx and coated-PP barrier structures need a slower
+// coating/co-extrusion step — which is what makes a 100–140 m/min cast line eliminate them (DEMO-02).
+const castLine = (temp, speed) => ({ 'Cast Film Line': { processingTempMinC: temp[0], processingTempMaxC: temp[1], minLineSpeedMpm: speed[0], maxLineSpeedMpm: speed[1] } });
+const equipmentProfiles = {
+  'MAT-001': castLine([170, 200], [90, 170]),
+  'MAT-002': castLine([175, 205], [80, 160]),
+  'MAT-003': castLine([170, 200], [40, 80]),
+  'MAT-004': castLine([170, 200], [30, 75]),
+  'MAT-005': castLine([165, 195], [100, 180]),
+  'MAT-006': castLine([170, 200], [50, 84]),
+  'MAT-007': castLine([185, 215], [80, 150]),
+  'MAT-008': castLine([175, 205], [70, 130]),
+};
+for (const m of materials) m.equipmentProfiles = equipmentProfiles[m.id];
+
+// ---------------------------------------------------------------------------
+// Process-parameter profiles (TRIAL-03) — the controlled dataset the CandidateGenerator draws from.
+// tempPosition / speedPosition place the trial inside the usable temperature / line-speed window (0 = low end).
+// ---------------------------------------------------------------------------
+
+const profiles = [
+  { id: 'low-temp', label: 'Low-temperature / low-speed profile', tempPosition: 0, speedPosition: 0, sealConditions: 'Conservative seal dwell (+15%), lower throughput', costMultiplier: 1.0, uncertaintyModifier: 0.9 },
+  { id: 'low-mid-temp', label: 'Reduced process-window profile', tempPosition: 0.25, speedPosition: 0.25, sealConditions: 'Slightly extended seal dwell (+8%), reduced throughput', costMultiplier: 1.06, uncertaintyModifier: 0.95 },
+  { id: 'mid-temp', label: 'Standard process-window profile', tempPosition: 0.5, speedPosition: 0.5, sealConditions: 'Standard seal dwell, nominal throughput', costMultiplier: 1.12, uncertaintyModifier: 1.0 },
+  { id: 'upper-mid-temp', label: 'Elevated process-window profile', tempPosition: 0.75, speedPosition: 0.75, sealConditions: 'Slightly reduced seal dwell (-5%), raised throughput', costMultiplier: 1.17, uncertaintyModifier: 1.07 },
+  { id: 'high-temp', label: 'High-temperature / high-speed profile', tempPosition: 1, speedPosition: 1, sealConditions: 'Reduced seal dwell (-10%), higher throughput', costMultiplier: 1.22, uncertaintyModifier: 1.15 },
+];
+
 // ---------------------------------------------------------------------------
 // Regulatory rules (REG-01..10) — representative of UK EPR / EU PPWR, not legal advice (10.3)
 // ---------------------------------------------------------------------------
@@ -173,10 +203,20 @@ const specifications = [];
 const requirements = [];
 const manufacturing = [];
 const regulatory = [];
+// Pristine copy of every demo project's inputs, so Admin "Reset Scenario" can restore the FULL baseline
+// (specification, requirements, constraints, regulatory) — not just clear the trial results (ADMIN-03).
+const baselines = {};
 
 function seedProject({ userEmail, name, productType, description, transitionObjective, spec, reqs, mfg, reg }) {
   const id = uuid();
   const timestamp = nowIso();
+  baselines[id] = {
+    project: { name, productType, description, transitionObjective, stage: 'Materials', stagesCompleted: ['Specification', 'Requirements'] },
+    specification: structuredClone(spec),
+    requirements: structuredClone(reqs),
+    manufacturing: structuredClone(mfg),
+    regulatory: structuredClone(reg),
+  };
   projects.push({
     id,
     userId: userIds[userEmail],
@@ -339,6 +379,8 @@ seedProject({
 // ---------------------------------------------------------------------------
 
 writeCollection('users', users);
+writeCollection('profiles', profiles);
+writeObject('baselines', baselines);
 writeCollection('materials', materials);
 writeObject('regulations', regulations);
 writeObject('scoring', scoring);

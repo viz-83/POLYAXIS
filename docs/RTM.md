@@ -12,7 +12,7 @@ verification point. "Screen" references §7 screen IDs; "Acceptance" references 
 | AUTH-03 | `frontend/src/screens/Login.jsx` (`navigate('/projects')`) | S-00→S-01 | Manual |
 | AUTH-04 | `AuthService.login` generic `INVALID_CREDENTIALS` error | S-00 | Acceptance: "Invalid credentials… without revealing which field" |
 | AUTH-05 | `AuthContext.logout`, `POST /api/auth/logout` | All | Manual |
-| AUTH-06 | `AuthContext.jsx` idle timer (60 min) + JWT `expiresIn` | All | Acceptance: "Session expires after 60 minutes" |
+| AUTH-06 | `AuthContext.jsx` idle timer (60 min) + sliding JWT: `middleware/auth.js` returns `X-Session-Token` once a token is older than `SESSION_REFRESH_AFTER_SECONDS`; `api/client.js` stores it | All | `tests/acceptance.test.js` (AUTH-06) |
 | AUTH-07 | `middleware/auth.js` (`requireAdmin`), `components/ProtectedRoute.jsx` (`AdminRoute`) | S-09 | Acceptance: "Technical User cannot access Admin Panel… 403" |
 | AUTH-08 | JWT in `sessionStorage`, Axios interceptor (`api/client.js`) | All | Manual |
 
@@ -41,8 +41,8 @@ verification point. "Screen" references §7 screen IDs; "Acceptance" references 
 | SPEC-04 | `requirements.sealStrengthMinimum` | S-03 tab 1 |
 | SPEC-05 | `requirements.shelfLifeRequirementMonths` / `productSensitivity` | S-03 tab 1 |
 | SPEC-06 | `requirements.recyclabilityTargetPercent` | S-03 tab 1 |
-| SPEC-07 | `middleware/validate.js` (`validateBody`), inline `field-error` rendering | S-02, S-03 |
-| SPEC-08 | "Save Draft" button — saves without stage advance | S-02 |
+| SPEC-07 | `middleware/validate.js` + `middleware/schemas.js` (field-level `error.details`), inline errors via `NumField error` in `RequirementsConstraints.jsx` | S-02, S-03 |
+| SPEC-08 | "Save Draft" button — saves without stage advance; optional fields may be null/blank; unsaved edits survive navigation via `hooks/useDraft.js` | S-02 |
 | SPEC-09 | `CandidateAlternatives.jsx` requirements summary card | S-04 |
 
 ## Module 4 — Manufacturing Constraints
@@ -80,7 +80,7 @@ verification point. "Screen" references §7 screen IDs; "Acceptance" references 
 |---|---|---|
 | MAT-01 | `GET /api/projects/:id/materials-overview`, `CandidateAlternatives.jsx` | S-04 |
 | MAT-02 | `backend/scripts/seed.js` materials array (8 materials) | — |
-| MAT-03 | Material card fields in `CandidateAlternatives.jsx` | S-04 |
+| MAT-03 | Spec sheets in `CandidateAlternatives.jsx`: layer structure, OTR/WVTR vs target, seal window, UK EPR / EU PPWR recyclability, shelf-life suitability | S-04 |
 | MAT-04 | `manufacturingCheck` badge per card | S-04 |
 | MAT-05 | `regulatoryCheck` badge per card | S-04 |
 | MAT-06 | Comparison slide-in panel (up to 3) | S-04 |
@@ -97,7 +97,7 @@ verification point. "Screen" references §7 screen IDs; "Acceptance" references 
 | TRIAL-02 | Trial record shape (`id`, `materialId`, `processParameters`, targets, feasibility, cost, `expectedOutcomeDescription`) |
 | TRIAL-03 | `CandidateGenerator.buildProcessProfiles` — 3 profiles (low/mid/high) per material |
 | TRIAL-04 | Hard-fail pre-filter in `CandidateGenerator.generate` + `RecommendationEngine.runOptimisation` (evidence exclusions) |
-| TRIAL-05 | `CandidateGenerator.generate` caps `candidates.slice(0, 12)` |
+| TRIAL-05 | `CandidateGenerator` expands each material into 5 profiles (`data/profiles.json`); `RecommendationEngine` keeps the top 12 after scoring (`MAX_TRIALS_PER_RUN`, `trimmedCount`) |
 | TRIAL-06 | Persisted to `trials.json` per run |
 | TRIAL-07 | `TrialRecommendation.jsx` `LoadingBlock label="Generating candidate trials…"` |
 
@@ -113,7 +113,7 @@ verification point. "Screen" references §7 screen IDs; "Acceptance" references 
 | ENGINE-06 | `.sort()` descending composite score |
 | ENGINE-07 | `dimensionScores` persisted per trial, rendered via `ScoreBar.jsx` |
 | ENGINE-08 | `AdminService.updateScoringWeights`, `AdminPanel.jsx` "Scoring Weights" |
-| ENGINE-09 | Pure function of inputs + deterministic tie-break by `id` |
+| ENGINE-09 | Pure function of inputs; sort on unrounded composite, then stable `materialId\|profileId` key (no UUIDs); covered by the determinism test |
 | ENGINE-10 | Synchronous in-process computation, no I/O in the scoring loop — well under 3s for ≤12 trials |
 
 ## Module 9 — Recommendation & Explanation
@@ -165,10 +165,10 @@ verification point. "Screen" references §7 screen IDs; "Acceptance" references 
 | ID | Implementation |
 |---|---|
 | ADMIN-01 | `routes/admin.js` (`requireAdmin`), `/admin` route wrapped in `AdminRoute` |
-| ADMIN-02 | `AdminService.listAllProjects`, "All Projects" section |
-| ADMIN-03 | `AdminService.resetProject` |
-| ADMIN-04 | `AdminService.resetAllProjects`, "Reset Scenarios" section |
-| ADMIN-05 | `AdminService.upsertMaterial`, "Materials Library" |
+| ADMIN-02 | `AdminService.listAllProjects` (owner, demo flag), "All Projects" section |
+| ADMIN-03 | `AdminService.resetProject` (restores `baselines.json` for demo projects) |
+| ADMIN-04 | `AdminService.resetAllProjects` (demo projects only), batch reset in "All Projects" + "Reset Scenarios" |
+| ADMIN-05 | `AdminService.createMaterial` / `updateMaterial`, `POST`/`PATCH /api/admin/materials`, `MaterialModal` in "Materials Library" |
 | ADMIN-06 | `AdminService.setMaterialActive` |
 | ADMIN-07 | `AdminService.updateRegulations`, "Regulatory Rules" |
 | ADMIN-08 | `AdminService.updateScoringWeights`, "Scoring Weights" |

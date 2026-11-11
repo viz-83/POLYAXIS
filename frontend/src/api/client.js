@@ -29,9 +29,18 @@ export function registerUnauthorizedHandler(handler) {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // AUTH-06: the server slides the 60-minute inactivity window by handing back a fresh token.
+    const fresh = response.headers?.['x-session-token'];
+    if (fresh) setToken(fresh);
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401 && onUnauthorized) {
+    // Login and logout 401s are answers, not expired sessions — reacting to them would re-trigger logout
+    // (which itself calls /auth/logout) and loop forever.
+    const url = String(error.config?.url || '');
+    const isAuthCall = url.includes('/auth/login') || url.includes('/auth/logout');
+    if (error.response?.status === 401 && onUnauthorized && !isAuthCall && getToken()) {
       onUnauthorized(error.response.data?.error?.code);
     }
     return Promise.reject(error);

@@ -22,11 +22,15 @@ export function AuthProvider({ children }) {
   const idleTimer = useRef(null);
 
   const logout = useCallback((message) => {
+    const token = getToken();
     setToken(null);
     sessionStorage.removeItem(USER_KEY);
     setUser(null);
     if (message) setSessionMessage(message);
-    api.post('/auth/logout').catch(() => {});
+    // Tell the server only if there was a session to end, and send the token we just cleared locally.
+    if (token) {
+      api.post('/auth/logout', null, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {

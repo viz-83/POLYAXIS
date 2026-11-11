@@ -24,3 +24,6 @@ Thumbs.db
 
 # Runtime data (seeded on demand via `npm run seed` — see scripts/seed.js)
 backend/data/*.json
+
+# one-off data backups made by migration scripts
+backend/data.backup-*/

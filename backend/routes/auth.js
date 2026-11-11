@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const AuthService = require('../services/AuthService');
 const { validateBody } = require('../middleware/validate');
 const { requireAuth } = require('../middleware/auth');
+const sessionTracker = require('../utils/sessionTracker');
 
 const router = express.Router();
 
@@ -25,12 +26,14 @@ router.post(
   (req, res) => {
     const { email, password } = req.body;
     const result = AuthService.login(email, password);
+    sessionTracker.touch(result.user.id);
     res.json(result);
   }
 );
 
 router.post('/logout', requireAuth, (req, res) => {
-  // JWT sessions are stateless in Phase 1; logout is enforced client-side by discarding the token.
+  // JWT sessions are stateless in Phase 1: the client discards the token, and we stop counting the user as active.
+  sessionTracker.forget(req.user.id);
   res.json({ success: true });
 });
 

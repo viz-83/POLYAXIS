@@ -15,13 +15,28 @@ class DashboardModule {
     const results = RecommendationEngine.getResults(projectId);
     const materials = readCollection('materials');
 
-    const candidatesOverview = latest
-      ? {
-          totalEvaluated: latest.ranked.length + latest.excluded.length,
-          compatibleCount: latest.ranked.length,
-          excludedCount: latest.excluded.length,
-        }
-      : { totalEvaluated: 0, compatibleCount: 0, excludedCount: 0 };
+    // DASH-05: counts are per MATERIAL (a material has several trials), plus a status line for each candidate.
+    let candidatesOverview = { totalEvaluated: 0, compatibleCount: 0, excludedCount: 0, statuses: [] };
+    if (latest) {
+      const seen = new Set();
+      const statuses = [];
+      for (const t of latest.ranked) {
+        if (seen.has(t.materialId)) continue;
+        seen.add(t.materialId);
+        statuses.push({ materialId: t.materialId, name: t.materialName, status: 'ranked', bestScore: t.compositeScore });
+      }
+      for (const e of latest.excluded) {
+        if (seen.has(e.materialId)) continue;
+        seen.add(e.materialId);
+        statuses.push({ materialId: e.materialId, name: e.materialName, status: 'excluded', reasonType: e.reasonType, reason: e.reason });
+      }
+      candidatesOverview = {
+        totalEvaluated: statuses.length,
+        compatibleCount: statuses.filter((s) => s.status === 'ranked').length,
+        excludedCount: statuses.filter((s) => s.status === 'excluded').length,
+        statuses,
+      };
+    }
 
     const primaryTrial = latest ? latest.ranked.find((t) => t.id === latest.primaryRecommendationId) : null;
 

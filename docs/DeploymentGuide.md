@@ -34,6 +34,8 @@ Sign in at `http://localhost:5173/login` with any [demo account](./DemoOperation
 | `FRONTEND_ORIGIN` | Yes | Exact origin allowed by CORS, e.g. `http://localhost:5173` |
 | `JWT_SECRET` | **Yes** | Long random string signing session tokens — the server refuses to start without it |
 | `SESSION_TIMEOUT_SECONDS` | No (default 3600) | JWT expiry / inactivity timeout (AUTH-06) |
+| `SESSION_REFRESH_AFTER_SECONDS` | No (default 300) | How often an active session's token is renewed (sliding session) |
+| `DEFAULT_SCORING_WEIGHTS` | No | JSON fallback weights (must sum to 1), used only when no `scoring.json` exists |
 | `DATA_DIR` | No (default `./data`) | Where the JSON data files live |
 
 ### `frontend/.env`

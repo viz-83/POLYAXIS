@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PolyAxis">
+  <defs>
+    <linearGradient id="pa-g" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#46b59d"/>
+      <stop offset="1" stop-color="#15423b"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 4.5 56.3 18.5v27L32 59.5 7.7 45.5v-27Z" fill="url(#pa-g)" stroke="url(#pa-g)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M23 46V19h10.5a8.25 8.25 0 0 1 0 16.5H27" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m31 31.4-4.2 4.1 4.2 4.1" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="43.5" cy="46.5" r="3.6" fill="#f5b83d"/>
+</svg>

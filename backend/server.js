@@ -32,6 +32,7 @@ app.use(
     origin: FRONTEND_ORIGIN,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    exposedHeaders: ['X-Session-Token'], // sliding-session refresh (AUTH-06)
   })
 );
 
