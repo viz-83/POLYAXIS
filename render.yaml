@@ -56,3 +56,11 @@ services:
         generateValue: true
       - key: SEED_DEMO_PASSWORD
         sync: false # Render asks for this value when you create the Blueprint
+      # OPTIONAL — one-click demo logins. The login page's demo tiles sign in directly when these are set at
+      # BUILD time. Vite inlines them into the public JavaScript, so anyone who loads the site can sign in as
+      # that account (VITE_ADMIN_PASSWORD = anyone can become admin). Throw-away demo instances only.
+      # Use the same values as SEED_DEMO_PASSWORD / SEED_ADMIN_PASSWORD, or the tiles will fail.
+      # - key: VITE_DEMO_PASSWORD
+      #   sync: false
+      # - key: VITE_ADMIN_PASSWORD
+      #   sync: false

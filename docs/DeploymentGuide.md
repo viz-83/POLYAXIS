@@ -105,6 +105,23 @@ Every push to `main` redeploys automatically (`autoDeploy: true`).
 | `SEED_ADMIN_PASSWORD` | generated | A public instance must not ship the published admin password |
 | `SEED_DEMO_PASSWORD` | you choose it | Demo users need a password you can share with reviewers |
 
+### One-click demo logins (optional, throw-away demos only)
+
+The login page has four "Demo accounts" tiles. What a tile does depends on the build:
+
+| Build | Tile behaviour |
+|---|---|
+| Local development | Signs in with the seeded defaults (`Demo2026!` / `Admin2026!`) |
+| Deployed, no `VITE_*` variables | Fills the email and focuses the password field — type the password set for the instance |
+| Deployed with `VITE_DEMO_PASSWORD` / `VITE_ADMIN_PASSWORD` | Signs in with one click |
+
+`VITE_*` variables are inlined into the JavaScript at **build time**, so they are **public**: anyone who
+opens the site can read them and sign in as that account. `VITE_ADMIN_PASSWORD` therefore lets any visitor
+become an administrator (edit materials, regulatory thresholds and scoring weights, reset scenarios). Use
+them only on an instance that holds nothing but re-seedable demo data. Set them to the **same values** as
+`SEED_DEMO_PASSWORD` / `SEED_ADMIN_PASSWORD`, then trigger a new deploy (changing an environment variable
+alone does not rebuild the frontend). To switch it off, delete both variables and redeploy.
+
 ### Free plan: what to expect
 
 - **Cold starts.** The service spins down after about 15 minutes without traffic. The next request wakes it

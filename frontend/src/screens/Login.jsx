@@ -5,14 +5,15 @@ import { apiErrorMessage } from '../api/client';
 import { Spinner } from '../components/Loading';
 import Logo from '../components/Logo';
 
-// Demo-account shortcuts. A production build must not carry passwords: the seeded passwords on a deployed
-// instance are chosen by its owner (SEED_*_PASSWORD), so the tiles only fill the email there. Local
-// development keeps the one-click defaults, and a demo deployment can opt in to one-click *demo-user*
-// logins by building with VITE_DEMO_PASSWORD (public by design). The admin password is never prefilled
-// outside development.
+// Demo-account shortcuts. A tile with a known password signs in with one click; without one it fills the
+// email and moves focus to the password field.
+//  - Local development: the seeded defaults are used.
+//  - A deployed build carries NO passwords unless they are supplied at build time through
+//    VITE_DEMO_PASSWORD / VITE_ADMIN_PASSWORD. Setting either one publishes it in the JavaScript bundle —
+//    anyone who loads the site can sign in as that account. Only do that for a throw-away demo instance.
 const DEV = import.meta.env.DEV;
 const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || (DEV ? 'Demo2026!' : '');
-const ADMIN_PASSWORD = DEV ? 'Admin2026!' : '';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || (DEV ? 'Admin2026!' : '');
 
 const DEMO_ACCOUNTS = [
   { label: 'Alex Chapman', role: 'Technical User', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD },
@@ -34,12 +35,11 @@ export default function Login() {
     return <Navigate to={location.state?.from?.pathname || '/projects'} replace />;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function signIn(emailValue, passwordValue) {
     setError('');
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(emailValue, passwordValue);
       navigate('/projects', { replace: true });
     } catch (err) {
       // AUTH-04: generic message, never reveals which field was wrong.
@@ -49,12 +49,20 @@ export default function Login() {
     }
   }
 
-  function fillDemo(account) {
+  function handleSubmit(e) {
+    e.preventDefault();
+    signIn(email, password);
+  }
+
+  function pickDemo(account) {
     setEmail(account.email);
     setPassword(account.password);
     setError('');
-    // No known password for this account: leave the field empty and put the cursor in it.
-    if (!account.password) document.getElementById('password')?.focus();
+    if (account.password) {
+      signIn(account.email, account.password); // one click
+    } else {
+      document.getElementById('password')?.focus(); // no known password: let the user type it
+    }
   }
 
   return (
@@ -119,9 +127,10 @@ export default function Login() {
                 <button
                   key={account.email}
                   type="button"
-                  onClick={() => fillDemo(account)}
-                  className="rounded-xl bg-white px-3 py-2.5 text-left shadow-card ring-1 ring-brand-900/10 transition hover:-translate-y-0.5 hover:ring-brand-300"
+                  onClick={() => pickDemo(account)}
+                  className="rounded-xl bg-white px-3 py-2.5 text-left shadow-card disabled:cursor-wait disabled:opacity-60 ring-1 ring-brand-900/10 transition hover:-translate-y-0.5 hover:ring-brand-300"
                   aria-label={`${account.label} (${account.role})`}
+                  disabled={submitting}
                 >
                   <span className="block text-sm font-semibold text-ink-800">{account.label}</span>
                   <span className="block text-xs text-ink-500">{account.role}</span>
