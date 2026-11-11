@@ -1,0 +1,58 @@
+# Render Blueprint — PolyAxis Phase 1 (frontend + backend as ONE free web service).
+#
+# The Express API serves the built React app itself, so there is a single public URL, no CORS
+# wiring and no cross-service environment variables. Full walkthrough: docs/DeploymentGuide.md.
+#
+# FREE PLAN BEHAVIOUR (read this):
+#   * The service spins down after ~15 minutes without traffic; the next request takes about a minute.
+#   * The filesystem is ephemeral. Phase 1 stores data as JSON files, so everything is wiped when the
+#     service restarts, spins down or redeploys. That is fine for a demo: the baseline demo projects are
+#     re-seeded automatically on every boot (backend/scripts/ensure-seed.js), but projects created by
+#     users do NOT survive.
+#   * To keep data, change `plan:` to `starter` and add a disk — see the commented block below.
+
+services:
+  - type: web
+    name: polyaxis
+    runtime: node
+    plan: free
+    region: frankfurt # closest Render region to the UK; change if you prefer
+    branch: main
+    autoDeploy: true
+
+    # devDependencies are required to build the frontend, hence --include=dev (NODE_ENV=production is set).
+    buildCommand: >-
+      npm --prefix frontend ci --include=dev &&
+      npm --prefix frontend run build &&
+      npm --prefix backend ci --omit=dev
+    # `npm start` seeds the demo data when the data directory is empty, then starts the server.
+    startCommand: npm --prefix backend start
+    healthCheckPath: /api/health
+
+    # --- Paid plans only: persistent storage so user-created data survives restarts and deploys. ---
+    # Uncomment, set `plan: starter`, and uncomment DATA_DIR in envVars below.
+    # disk:
+    #   name: polyaxis-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      # Random, stored in the Render dashboard (Environment tab). Never commit a real secret.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_TIMEOUT_SECONDS
+        value: "3600"
+      - key: SESSION_REFRESH_AFTER_SECONDS
+        value: "300"
+      # - key: DATA_DIR        # paid plans: must match the disk mountPath above
+      #   value: /var/data
+      # Passwords for the seeded accounts. On the free plan the data is re-seeded on every boot, so these
+      # apply every time. The admin password is generated — read it from the Environment tab.
+      - key: SEED_ADMIN_PASSWORD
+        generateValue: true
+      - key: SEED_DEMO_PASSWORD
+        sync: false # Render asks for this value when you create the Blueprint

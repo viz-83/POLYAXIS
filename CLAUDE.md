@@ -66,6 +66,10 @@ cd ../frontend && npm install && npm run dev            # :5173
 
 Demo logins are in [`docs/DemoOperationGuide.md`](./docs/DemoOperationGuide.md).
 
+**Deploying:** `render.yaml` is a Render Blueprint — one free web service where the Express API also serves the built
+frontend (`npm --prefix backend start` seeds the demo data whenever the data directory is empty). See
+[`docs/DeploymentGuide.md`](./docs/DeploymentGuide.md) §5.
+
 ## Conventions to preserve
 
 - **Every backend service is synchronous** (`fs.readFileSync`/`writeFileSync` via

@@ -18,11 +18,15 @@ const BCRYPT_COST = 10;
 // Users (section 4.4)
 // ---------------------------------------------------------------------------
 
+// Deployments override these so a public instance never ships the published demo passwords.
+const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD || 'Demo2026!';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'Admin2026!';
+
 const demoAccounts = [
-  { name: 'Alex Chapman', email: 'alex.chapman@polyaxis-demo.com', password: 'Demo2026!', role: 'Technical User' },
-  { name: 'Sarah Mitchell', email: 'sarah.mitchell@polyaxis-demo.com', password: 'Demo2026!', role: 'Technical User' },
-  { name: 'James Okafor', email: 'james.okafor@polyaxis-demo.com', password: 'Demo2026!', role: 'Technical User' },
-  { name: 'Admin User', email: 'admin@polyaxis-demo.com', password: 'Admin2026!', role: 'Administrator' },
+  { name: 'Alex Chapman', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User' },
+  { name: 'Sarah Mitchell', email: 'sarah.mitchell@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User' },
+  { name: 'James Okafor', email: 'james.okafor@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User' },
+  { name: 'Admin User', email: 'admin@polyaxis-demo.com', password: ADMIN_PASSWORD, role: 'Administrator' },
 ];
 
 const userIds = {};
@@ -396,5 +400,7 @@ writeObject('systemStatus', { lastResetAt: nowIso(), seededAt: nowIso() });
 console.log(`Seed complete: ${users.length} users, ${materials.length} materials, ${projects.length} demo projects.`);
 console.log('Demo credentials:');
 for (const account of demoAccounts) {
-  console.log(`  ${account.role.padEnd(16)} ${account.email}  /  ${account.password}`);
+  // Never print a password that was supplied through the environment (it would end up in deploy logs).
+  const isDefault = account.password === 'Demo2026!' || account.password === 'Admin2026!';
+  console.log(`  ${account.role.padEnd(16)} ${account.email}  /  ${isDefault ? account.password : '(set via SEED_*_PASSWORD)'}`);
 }
