@@ -5,11 +5,20 @@ import { apiErrorMessage } from '../api/client';
 import { Spinner } from '../components/Loading';
 import Logo from '../components/Logo';
 
+// Demo-account shortcuts. A production build must not carry passwords: the seeded passwords on a deployed
+// instance are chosen by its owner (SEED_*_PASSWORD), so the tiles only fill the email there. Local
+// development keeps the one-click defaults, and a demo deployment can opt in to one-click *demo-user*
+// logins by building with VITE_DEMO_PASSWORD (public by design). The admin password is never prefilled
+// outside development.
+const DEV = import.meta.env.DEV;
+const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || (DEV ? 'Demo2026!' : '');
+const ADMIN_PASSWORD = DEV ? 'Admin2026!' : '';
+
 const DEMO_ACCOUNTS = [
-  { label: 'Alex Chapman', role: 'Technical User', email: 'alex.chapman@polyaxis-demo.com', password: 'Demo2026!' },
-  { label: 'Sarah Mitchell', role: 'Technical User', email: 'sarah.mitchell@polyaxis-demo.com', password: 'Demo2026!' },
-  { label: 'James Okafor', role: 'Technical User', email: 'james.okafor@polyaxis-demo.com', password: 'Demo2026!' },
-  { label: 'Admin User', role: 'Administrator', email: 'admin@polyaxis-demo.com', password: 'Admin2026!' },
+  { label: 'Alex Chapman', role: 'Technical User', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD },
+  { label: 'Sarah Mitchell', role: 'Technical User', email: 'sarah.mitchell@polyaxis-demo.com', password: DEMO_PASSWORD },
+  { label: 'James Okafor', role: 'Technical User', email: 'james.okafor@polyaxis-demo.com', password: DEMO_PASSWORD },
+  { label: 'Admin User', role: 'Administrator', email: 'admin@polyaxis-demo.com', password: ADMIN_PASSWORD },
 ];
 
 export default function Login() {
@@ -44,6 +53,8 @@ export default function Login() {
     setEmail(account.email);
     setPassword(account.password);
     setError('');
+    // No known password for this account: leave the field empty and put the cursor in it.
+    if (!account.password) document.getElementById('password')?.focus();
   }
 
   return (
@@ -100,6 +111,9 @@ export default function Login() {
 
           <div className="mt-6">
             <p className="eyebrow !text-ink-500">Demo accounts</p>
+            {!DEMO_PASSWORD && (
+              <p className="mt-1.5 text-xs text-ink-500">Choose an account to fill in the email — the password was set by whoever deployed this instance.</p>
+            )}
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {DEMO_ACCOUNTS.map((account) => (
                 <button
