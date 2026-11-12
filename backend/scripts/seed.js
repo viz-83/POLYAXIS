@@ -23,10 +23,10 @@ const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD || 'Demo2026!';
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'Admin2026!';
 
 const demoAccounts = [
-  { name: 'Alex Chapman', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User' },
-  { name: 'Sarah Mitchell', email: 'sarah.mitchell@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User' },
-  { name: 'James Okafor', email: 'james.okafor@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User' },
-  { name: 'Admin User', email: 'admin@polyaxis-demo.com', password: ADMIN_PASSWORD, role: 'Administrator' },
+  { name: 'Alex Chapman', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User', jobTitle: 'Project Engineer' },
+  { name: 'Sarah Mitchell', email: 'sarah.mitchell@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User', jobTitle: 'Process Engineer' },
+  { name: 'James Okafor', email: 'james.okafor@polyaxis-demo.com', password: DEMO_PASSWORD, role: 'Technical User', jobTitle: 'Materials Scientist' },
+  { name: 'Admin User', email: 'admin@polyaxis-demo.com', password: ADMIN_PASSWORD, role: 'Administrator', jobTitle: 'Administrator' },
 ];
 
 const userIds = {};
@@ -38,7 +38,8 @@ const users = demoAccounts.map((account) => {
     name: account.name,
     email: account.email,
     passwordHash: bcrypt.hashSync(account.password, BCRYPT_COST),
-    role: account.role,
+    role: account.role, // access-control role (spec §4): 'Technical User' | 'Administrator'
+    jobTitle: account.jobTitle, // display only — shown on the login tiles and in the app header
     createdAt: nowIso(),
   };
 });

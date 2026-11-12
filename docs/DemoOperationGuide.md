@@ -2,12 +2,12 @@
 
 ## Demo accounts
 
-| Name | Email | Password | Role | Seeded project |
-|---|---|---|---|---|
-| Alex Chapman | `alex.chapman@polyaxis-demo.com` | `Demo2026!` | Technical User | Fresh Food Tray Lidding — PE/PA to Mono-PE |
-| Sarah Mitchell | `sarah.mitchell@polyaxis-demo.com` | `Demo2026!` | Technical User | Snack Pouch — OPP/PE to Mono-PP |
-| James Okafor | `james.okafor@polyaxis-demo.com` | `Demo2026!` | Technical User | Industrial Stretch Wrap — Multi-layer to Barrier Mono-PE |
-| Admin User | `admin@polyaxis-demo.com` | `Admin2026!` | Administrator | Full system access |
+| Name | Email | Password | Job title | Access role | Seeded project |
+|---|---|---|---|---|---|
+| Alex Chapman | `alex.chapman@polyaxis-demo.com` | `Demo2026!` | Project Engineer | Technical User | Fresh Food Tray Lidding — PE/PA to Mono-PE |
+| Sarah Mitchell | `sarah.mitchell@polyaxis-demo.com` | `Demo2026!` | Process Engineer | Technical User | Snack Pouch — OPP/PE to Mono-PP |
+| James Okafor | `james.okafor@polyaxis-demo.com` | `Demo2026!` | Materials Scientist | Technical User | Industrial Stretch Wrap — Multi-layer to Barrier Mono-PE |
+| Admin User | `admin@polyaxis-demo.com` | `Admin2026!` | Administrator | Administrator | Full system access |
 
 Run `npm run seed` from `backend/` (or **Admin Panel → Reset Scenarios → Reset All**) before any
 demonstration to return all three projects to their baseline state: specification, performance

@@ -89,6 +89,22 @@ describe('Module 1 — Authentication & session management', () => {
     assert.equal(r.body.user.passwordHash, undefined, 'password hash must never be returned');
   });
 
+  it('demo accounts carry a display job title while keeping the spec RBAC role', async () => {
+    const expected = {
+      'alex.chapman@polyaxis-demo.com': ['Project Engineer', 'Technical User'],
+      'sarah.mitchell@polyaxis-demo.com': ['Process Engineer', 'Technical User'],
+      'james.okafor@polyaxis-demo.com': ['Materials Scientist', 'Technical User'],
+    };
+    for (const [email, [jobTitle, role]] of Object.entries(expected)) {
+      const r = await api('POST', '/auth/login', { body: { email, password: 'Demo2026!' } });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.user.jobTitle, jobTitle);
+      assert.equal(r.body.user.role, role, 'jobTitle is display-only; role must stay the spec RBAC role');
+    }
+    const admin = await api('POST', '/auth/login', { body: { email: 'admin@polyaxis-demo.com', password: 'Admin2026!' } });
+    assert.equal(admin.body.user.role, 'Administrator');
+  });
+
   it('AUTH-04 / AC: invalid credentials give the same generic error for unknown email and wrong password', async () => {
     const a = await api('POST', '/auth/login', { body: { email: 'nobody@example.com', password: 'Demo2026!' } });
     const b = await api('POST', '/auth/login', { body: { email: 'alex.chapman@polyaxis-demo.com', password: 'wrong-password' } });

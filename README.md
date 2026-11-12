@@ -73,12 +73,12 @@ See [`docs/DeploymentGuide.md`](./docs/DeploymentGuide.md) for full details.
 
 ## Demo accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Technical User | `alex.chapman@polyaxis-demo.com` | `Demo2026!` |
-| Technical User | `sarah.mitchell@polyaxis-demo.com` | `Demo2026!` |
-| Technical User | `james.okafor@polyaxis-demo.com` | `Demo2026!` |
-| Administrator | `admin@polyaxis-demo.com` | `Admin2026!` |
+| Job title | Access role | Email | Password |
+|---|---|---|---|
+| Project Engineer | Technical User | `alex.chapman@polyaxis-demo.com` | `Demo2026!` |
+| Process Engineer | Technical User | `sarah.mitchell@polyaxis-demo.com` | `Demo2026!` |
+| Materials Scientist | Technical User | `james.okafor@polyaxis-demo.com` | `Demo2026!` |
+| Administrator | Administrator | `admin@polyaxis-demo.com` | `Admin2026!` |
 
 ## Scope note
 

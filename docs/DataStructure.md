@@ -13,7 +13,8 @@ PostgreSQL tables in Phase 2 (§10.4 of the requirements document).
 | `name` | string | |
 | `email` | string | Unique, used for login |
 | `passwordHash` | string | bcrypt, cost 10 |
-| `role` | `'Technical User' \| 'Administrator'` | |
+| `role` | `'Technical User' \| 'Administrator'` | Access-control role (spec §4) — the only field authorization looks at |
+| `jobTitle` | string | Display only (e.g. `Project Engineer`); shown on the login tiles and in the app header. Falls back to `role` when absent |
 | `createdAt` | ISO 8601 | |
 
 ## `projects.json`

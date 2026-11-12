@@ -57,7 +57,7 @@ function TopBar() {
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-xs font-bold text-white">{initials(user?.name)}</span>
           <div className="hidden leading-tight xl:block">
             <p className="text-sm font-semibold text-ink-900">{user?.name}</p>
-            <p className="text-xs text-ink-500">{isAdmin ? 'Administrator' : user?.role}</p>
+            <p className="text-xs text-ink-500">{isAdmin ? 'Administrator' : user?.jobTitle || user?.role}</p>
           </div>
         </div>
       </div>
@@ -122,10 +122,10 @@ function SidebarBody({ onNavigate, rail = false }) {
       <div className="mt-auto space-y-3">
         <div className={`rounded-2xl bg-white/5 ring-1 ring-white/10 ${rail ? 'p-2 xl:p-3' : 'p-3'}`}>
           <div className={`flex items-center gap-3 ${rail ? 'justify-center xl:justify-start' : ''}`}>
-            <span title={rail ? `${user?.name} · ${user?.role}` : undefined} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold">{initials(user?.name)}</span>
+            <span title={rail ? `${user?.name} · ${user?.jobTitle || user?.role}` : undefined} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold">{initials(user?.name)}</span>
             <div className={`min-w-0 ${full}`}>
               <p className="truncate text-sm font-semibold">{user?.name}</p>
-              <p className="truncate text-xs text-brand-100/60">{user?.role}</p>
+              <p className="truncate text-xs text-brand-100/60">{user?.jobTitle || user?.role}</p>
             </div>
           </div>
           <button type="button" onClick={handleLogout} title="Sign out" aria-label="Sign out" className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/20">

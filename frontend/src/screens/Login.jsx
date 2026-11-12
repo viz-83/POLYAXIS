@@ -16,10 +16,10 @@ const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || (DEV ? 'Demo2026!' :
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || (DEV ? 'Admin2026!' : '');
 
 const DEMO_ACCOUNTS = [
-  { label: 'Alex Chapman', role: 'Technical User', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD },
-  { label: 'Sarah Mitchell', role: 'Technical User', email: 'sarah.mitchell@polyaxis-demo.com', password: DEMO_PASSWORD },
-  { label: 'James Okafor', role: 'Technical User', email: 'james.okafor@polyaxis-demo.com', password: DEMO_PASSWORD },
-  { label: 'Admin User', role: 'Administrator', email: 'admin@polyaxis-demo.com', password: ADMIN_PASSWORD },
+  { label: 'Alex Chapman', title: 'Project Engineer', email: 'alex.chapman@polyaxis-demo.com', password: DEMO_PASSWORD },
+  { label: 'Sarah Mitchell', title: 'Process Engineer', email: 'sarah.mitchell@polyaxis-demo.com', password: DEMO_PASSWORD },
+  { label: 'James Okafor', title: 'Materials Scientist', email: 'james.okafor@polyaxis-demo.com', password: DEMO_PASSWORD },
+  { label: 'Admin User', title: 'Administrator', email: 'admin@polyaxis-demo.com', password: ADMIN_PASSWORD },
 ];
 
 export default function Login() {
@@ -129,11 +129,11 @@ export default function Login() {
                   type="button"
                   onClick={() => pickDemo(account)}
                   className="rounded-xl bg-white px-3 py-2.5 text-left shadow-card disabled:cursor-wait disabled:opacity-60 ring-1 ring-brand-900/10 transition hover:-translate-y-0.5 hover:ring-brand-300"
-                  aria-label={`${account.label} (${account.role})`}
+                  aria-label={`${account.label} (${account.title})`}
                   disabled={submitting}
                 >
                   <span className="block text-sm font-semibold text-ink-800">{account.label}</span>
-                  <span className="block text-xs text-ink-500">{account.role}</span>
+                  <span className="block text-xs text-ink-500">{account.title}</span>
                 </button>
               ))}
             </div>
